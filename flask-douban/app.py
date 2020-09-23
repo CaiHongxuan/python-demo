@@ -1,13 +1,35 @@
 from flask import Flask, request, render_template
+from wordcloud import WordCloud  # 词云
+import matplotlib.pyplot as plt  # 绘图，数据可视化
+from PIL import Image  # 图片处理
+import numpy as np  # 矩阵运算
 import sqlite3
 import math
+import jieba  # 分词
 
 app = Flask(__name__)
 
 
 @app.route('/')
-def hello_world():
-    return render_template('index.html')
+def index():
+    conn = sqlite3.connect('./douban.db')
+    cur = conn.cursor()
+    sql = 'select judge_num,inq from movies'
+    data = cur.execute(sql)
+    text = ""
+    num = 0
+    for item in data:
+        num = num + item[0]
+        text = text + item[1]
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    cut = jieba.cut(text)
+    string = " ".join(cut)
+    word_count = len(string)  # 词云数
+    num = '%.2f' % (num / 100000000)  # 评分总人数
+    return render_template('index.html', total=250, word_count=word_count, num=num)
 
 
 @app.route('/movies')
@@ -53,6 +75,31 @@ def score():
 
 @app.route('/wordcloud')
 def wordcloud():
+    # conn = sqlite3.connect('./douban.db')
+    # cur = conn.cursor()
+    # sql = 'select inq from movies'
+    # data = cur.execute(sql)
+    # text = ""
+    # for item in data:
+    #     text = text + item[0]
+    # conn.commit()
+    # cur.close()
+    # conn.close()
+    #
+    # cut = jieba.cut(text)
+    # string = " ".join(cut)
+    #
+    # img = Image.open(r'./static/assets/onepage/img/choose-us.png')
+    # img_arr = np.array(img)  # 图片转数组
+    #
+    # wc = WordCloud(background_color='white', mask=img_arr, font_path="msyh.ttc").generate_from_text(string)
+    #
+    # # 绘图
+    # plt.figure(1)
+    # plt.imshow(wc)
+    # plt.axis('off')
+    # plt.savefig(r'./static/assets/onepage/img/wordcloud.png', dpi=500)
+
     return render_template('wordcloud.html')
 
 
